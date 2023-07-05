@@ -1,0 +1,118 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Python 3",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// "image": "mcr.microsoft.com/devcontainers/python:0-3.11",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"VARIANT": "3.11-bullseye",
+			"NODE_VERSION": "lts/*"
+		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"moby": true,
+			"azureDnsAutoDetection": true,
+			"installDockerBuildx": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "v2"
+		},
+		"ghcr.io/devcontainers/features/aws-cli:1": {}
+	},
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "bash .devcontainer/post-create-command.sh",
+	"initializeCommand": "bash .devcontainer/initialize-command.sh",
+	"runArgs": [
+		"--env-file",
+		".devcontainer/.env"
+	],
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"window.title": "${rootName}${separator}${dirty}${activeEditorShort}${separator}${profileName}${separator}${appName}",
+				"window.commandCenter": true,
+				"window.menuBarVisibility": "toggle",
+				"[json]": {
+					"editor.defaultFormatter": "vscode.json-language-features",
+					"editor.formatOnSave": true
+				},
+				"[jsonc]": {
+					"editor.quickSuggestions": {
+						"strings": true
+					},
+					"editor.suggest.insertMode": "replace",
+					"editor.defaultFormatter": "vscode.json-language-features",
+					"editor.formatOnSave": true
+				},
+				"[markdown]": {
+					"editor.defaultFormatter": "yzhang.markdown-all-in-one",
+					"editor.formatOnSave": true
+				},
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": false,
+						"source.": true
+					}
+				},
+				"[html]": {
+					"editor.suggest.insertMode": "replace",
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "vscode.html-language-features"
+				},
+				"[toml]": {
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "tamasfe.even-better-toml"
+				},
+				"python.poetryPath": "/usr/local/bin/poetry",
+				"python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+				"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+				"python.analysis.typeCheckingMode": "basic",
+				"python.linting.enabled": true,
+				"black-formatter.interpreter": [
+					"${workspaceFolder}/.venv/bin/python"
+				],
+				"python.testing.pytestEnabled": true,
+				"python.terminal.activateEnvironment": false,
+				"jupyter.notebookFileRoot": "${workspaceFolder}/",
+				"files.exclude": {
+					"**/__pycache__": true,
+					"**/*.egg-info": true,
+					"**/.pytest_cache": true,
+					"**/.benchmarks": true,
+					"**/.ruff_cache": true,
+					"**/.venv": true,
+					"pyrepo": true
+				},
+				"git.branchProtection": [
+					"main",
+					"main/*"
+				]
+			},
+			"extensions": [
+				"ms-python.vscode-pylance",
+				"ms-python.python",
+				"ms-python.black-formatter",
+				"ms-azuretools.vscode-docker",
+				"ms-toolsai.jupyter",
+				"charliermarsh.ruff",
+				"eamodio.gitlens",
+				"tamasfe.even-better-toml",
+				"yzhang.markdown-all-in-one"
+			],
+			"recommendations": [
+				"GitHub.copilot"
+			]
+		}
+	}
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

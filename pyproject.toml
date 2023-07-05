@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "fastws"
+version = "0.1.0"
+description = "FastWS framework. A WebSocket wrapper around FastAPI with auto-documentation using AsyncAPI."
+authors = ["Endre Krohn <endre@skript.no>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "0.100.0-beta3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
