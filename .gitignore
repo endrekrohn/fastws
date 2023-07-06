@@ -16,3 +16,5 @@ docs_build
 venv
 .env
 *.log
+poetry.lock
+.vscode

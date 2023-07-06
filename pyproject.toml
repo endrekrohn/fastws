@@ -1,14 +1,21 @@
 [tool.poetry]
 name = "fastws"
-version = "0.1.0"
+version = "0.1.1"
 description = "FastWS framework. A WebSocket wrapper around FastAPI with auto-documentation using AsyncAPI."
 authors = ["Endre Krohn <endre@skript.no>"]
 readme = "README.md"
+packages = [{ include = "fastws" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = "0.100.0-beta3"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.24.0"
+black = "^23.3.0"
+ruff = "^0.0.277"
+uvicorn = { extras = ["standard"], version = "^0.22.0" }
 
 [build-system]
 requires = ["poetry-core"]
