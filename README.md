@@ -14,6 +14,12 @@ FastWS is a wrapper around FastAPI to create better WebSocket applications with 
 
 The current supported AsyncAPI verison is `2.4.0`. Once version `3.0.0` is released the plan is to upgrade to this standard.
 
+---
+## Example project
+
+If you are familiar with FastAPI and want to look at an example project using FastWS <a href="https://github.com/endrekrohn/fastws-example" target="_blank">look here</a>👨‍💻
+
+---
 
 ## Requirements
 
