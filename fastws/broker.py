@@ -28,7 +28,7 @@ class Broker:
     def __init__(
         self,
         title: str = "Event Driven Broker",
-        version: str = "1.0.0",
+        version: str = "0.0.1",
         asyncapi_version: str = "2.4.0",
         description: str | None = None,
         terms_of_service: str | None = None,
