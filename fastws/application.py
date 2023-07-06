@@ -99,7 +99,6 @@ class FastWS(Broker):
             return
         client = Client(ws)
         self._connect(client)
-        await client.send(client.uid)
         try:
             yield client
         except Exception:
