@@ -11,7 +11,7 @@ class Message(BaseModel):
     messageId: str
     name: str
     title: str
-    summary: str
+    summary: str | None = None
     description: str
     contentType: str = "application/json"
     payload: dict | None = None

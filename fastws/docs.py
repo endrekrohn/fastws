@@ -56,9 +56,9 @@ def get_messages(
     for route in routes:
         msg = asyncapi.Message(
             messageId=route.operation,
-            name=route.operation,
-            title=" ".join(route.operation.split("_")).title(),
-            summary=route.operation,
+            name=route.name,
+            title=" ".join(route.name.split("_")).title(),
+            summary=route.summary,
             description=route.description,
             tags=[asyncapi.Tag(name=t) for t in route.tags],
         )
