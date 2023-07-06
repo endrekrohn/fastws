@@ -1,10 +1,27 @@
 [tool.poetry]
 name = "fastws"
-version = "0.1.1"
+version = "0.1.2"
 description = "FastWS framework. A WebSocket wrapper around FastAPI with auto-documentation using AsyncAPI."
 authors = ["Endre Krohn <endre@skript.no>"]
 readme = "README.md"
 packages = [{ include = "fastws" }]
+repository = "https://github.com/endrekrohn/fastws"
+documentation = "https://github.com/endrekrohn/fastws"
+keywords = ["fastapi", "pydantic", "starlette", "websockets", "asyncapi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Framework :: AsyncIO",
+    "Framework :: FastAPI",
+    "Framework :: Pydantic",
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"

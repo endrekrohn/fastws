@@ -3,7 +3,7 @@ import logging
 from typing import AsyncGenerator, AsyncIterator, Callable, Awaitable
 from uuid import uuid4
 from fastapi import Request, WebSocketException, status, FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ValidationError
 from starlette.websockets import WebSocket
 
@@ -49,8 +49,8 @@ class FastWS(Broker):
         asyncapi_url: str | None = "/asyncapi.json",
         asyncapi_docs_url: str | None = "/asyncapi",
         debug: bool = False,
-        heartbeat_interval: int | None = 10,
-        max_connection_lifespan: int | None = None,
+        heartbeat_interval: float | None = None,
+        max_connection_lifespan: float | None = None,
         auth_handler: Callable[[WebSocket], Awaitable[bool]] | None = None,
         auto_ws_accept: bool = True,
     ) -> None:
@@ -136,7 +136,7 @@ class FastWS(Broker):
             )
         raise exc
 
-    async def client(self, client: Client):
+    async def serve(self, client: Client):
         try:
             async with asyncio.timeout(
                 self.heartbeat_interval
@@ -144,28 +144,27 @@ class FastWS(Broker):
                 self.max_connection_lifespan,
             ):
                 async for message in client:
-                    await self.client_send(message, client=client)
                     if self.heartbeat_interval is not None:
                         heartbeat_cm.reschedule(
                             asyncio.get_running_loop().time() + self.heartbeat_interval
                         )
+                    await self.client_send(message, client=client)
         except (ValueError, ValidationError, NoMatchingOperation, TimeoutError) as exc:
             await self.handle_exception(exc)
 
     async def client_send(self, message: Message, *, client: Client):
         if (
-            reply := await self(message, method="SEND", client=client, manager=self)
+            reply := await self(message, method="SEND", client=client, app=self)
         ) is not None:
             await client.send(reply.model_dump_json())
 
-    async def server_send(self, message: Message, *, topic: str):
-        if (reply := await self(message, method="RECEIVE", manager=self)) is None:
+    async def server_send(self, message: Message, *, topic: str, **params):
+        if (reply := await self(message, method="RECEIVE", app=self, **params)) is None:
             return
         await self.broadcast(topic, reply)
 
     def setup(self, app: FastAPI) -> None:
         if self.asyncapi_url and self.asyncapi_docs_url:
-            self.asyncapi_url
 
             async def asyncapi_ui_html(req: Request) -> HTMLResponse:
                 root_path = req.scope.get("root_path", "").rstrip("/")
@@ -180,3 +179,8 @@ class FastWS(Broker):
             app.add_route(
                 self.asyncapi_docs_url, asyncapi_ui_html, include_in_schema=False
             )
+
+            async def asyncapi_json(_: Request) -> JSONResponse:
+                return JSONResponse(self.asyncapi())
+
+            app.add_route(self.asyncapi_url, asyncapi_json, include_in_schema=False)

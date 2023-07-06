@@ -1,87 +1,29 @@
-import asyncio
-import logging
+from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import Depends, FastAPI, WebSocket
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from fastws.docs import get_asyncapi_html
 
-from fastws.application import FastWS, Client
-from fastws.routing import Message
+from fastapi import Depends, FastAPI
+from fastws import Client, FastWS
+
+service = FastWS()
 
 
-def get_auth(timeout: float | None = 5):
-    async def auth_handler(ws: WebSocket) -> bool:
-        await ws.accept()
-        try:
-            initial_msg = await asyncio.wait_for(ws.receive_text(), timeout=timeout)
-            return initial_msg == "secret"
-        except asyncio.exceptions.TimeoutError:
-            logging.info("Took to long to provide authentication")
-        return False
+@service.send("ping")
+async def send_event_a(client: Client, app: FastWS) -> str:
+    print(f"{client=}")
+    print(f"{app.connections=}")
 
-    return auth_handler
+    return "pong"
 
 
-fws = FastWS(
-    servers={
-        "development": {
-            "url": "{domain}:{port}/{basepath}",
-            "description": "The development server",
-            "protocol": "ws",
-            "variables": {
-                "domain": {"default": "localhost"},
-                "port": {"default": "8000"},
-                "basepath": {"default": ""},
-            },
-        }
-    },
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    service.setup(app)
+    yield
 
 
-class SubscribePayload(BaseModel):
-    topic: str
-
-
-class SubscribeResponse(BaseModel):
-    detail: str
-    topics: set[str]
-
-
-@fws.send("subscribe")
-async def subscribe_to_topic(
-    payload: SubscribePayload, client: Client
-) -> SubscribeResponse:
-    client.subscribe(payload.topic)
-    return SubscribeResponse(
-        detail=f"Subscribed to {payload.topic}", topics=client.topics
-    )
-
-
-@fws.recv("alert")
-async def recv_client() -> str:
-    return "hello"
-
-
-app = FastAPI()
-
-
-@app.get("/ws/docs")
-def asyncapi_html():
-    return HTMLResponse(get_asyncapi_html())
-
-
-@app.get("/asyncapi.json")
-def asyncapi_json():
-    return fws.asyncapi()
+app = FastAPI(lifespan=lifespan)
 
 
 @app.websocket("/")
-async def fastws_stream(client: Annotated[Client, Depends(fws.manage)]):
-    await fws.client(client)
-
-
-@app.post("/")
-async def status(topic: str):
-    await fws.server_send(Message(type="alert"), topic=topic)
-    return "ok"
+async def fastws_stream(client: Annotated[Client, Depends(service.manage)]):
+    await service.serve(client)
