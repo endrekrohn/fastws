@@ -1,7 +1,7 @@
 # FastWS
 
 
-![FastWS Logo](assets/fastws.png)
+![FastWS Logo](https://raw.githubusercontent.com/endrekrohn/fastws/assets/assets/fastws.png)
 
 **Source Code**: <a href="https://github.com/endrekrohn/fastws" target="_blank">https://github.com/endrekrohn/fastws</a>
 
@@ -73,7 +73,7 @@ async def fastws_stream(client: Annotated[Client, Depends(service.manage)]):
 
 We can look at the generated documentation at `http://localhost:<port>/asyncapi`.
 
-![AsyncAPI Logo](assets/asyncapi_example.png)
+![AsyncAPI Logo](https://raw.githubusercontent.com/endrekrohn/fastws/assets/assets/asyncapi_example.png)
 
 ---
 
