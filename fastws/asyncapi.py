@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Tag(BaseModel):
@@ -15,6 +15,7 @@ class Message(BaseModel):
     description: str
     contentType: str = "application/json"
     payload: dict | None = None
+    x_response: dict | None = Field(default=None, alias="x-response")
     tags: list[Tag] | None = None
     examples: list[dict] | None = None
 

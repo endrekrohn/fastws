@@ -8,6 +8,9 @@ from pydantic_core import CoreSchema
 from fastws import asyncapi
 from fastws.routing import Operation
 
+REF_SCHEMAS_TEMPLATE = "#/components/schemas/{model}"
+REF_MESSAGES_TEMPLATE = "#/components/messages/{message}"
+
 
 @dataclass
 class Field:
@@ -29,17 +32,17 @@ def get_fields(
                     core_schema=route.payload.__pydantic_core_schema__,
                 )
             )
-        if route.response_payload is not None and issubclass(
-            route.response_payload, BaseModel
+        if route.reply_payload is not None and issubclass(
+            route.reply_payload, BaseModel
         ):
             key = route.operation
             if route.method == "SEND":
-                key = f"{key}_reply"
+                key = route.reply_operation
             fields.append(
                 Field(
                     key=key,
                     json_mode="validation",
-                    core_schema=route.response_payload.__pydantic_core_schema__,
+                    core_schema=route.reply_payload.__pydantic_core_schema__,
                 )
             )
     return fields
@@ -65,16 +68,20 @@ def get_messages(
         if route.method == "SEND":
             key = route.operation
             pub_messages.append(key)
-            messages[key] = msg.model_copy(
-                update={
-                    "messageId": key,
-                    "payload": field_mapping.get((key, "validation"), None),
+
+            to_update = {
+                "messageId": key,
+                "payload": field_mapping.get((key, "validation"), None),
+            }
+            if route.reply_operation is not None:
+                to_update["x_response"] = {
+                    "$ref": REF_MESSAGES_TEMPLATE.format(message=route.reply_operation)
                 }
-            )
-        if route.response_model or route.method == "RECEIVE":
+            messages[key] = msg.model_copy(update=to_update)
+        if route.response_model or route.reply_operation or route.method == "RECEIVE":
             key = route.operation
             if route.method == "SEND":
-                key = f"{key}_reply"
+                key = route.reply_operation
             sub_messages.append(key)
             messages[key] = msg.model_copy(
                 update={
@@ -109,9 +116,6 @@ def get_asyncapi(
     if servers is not None:
         output["servers"] = servers
 
-    REF_SCHEMAS_TEMPLATE = "#/components/schemas/{model}"
-    REF_MESSAGES_TEMPLATE = "#/components/messages/{message}"
-
     schema_generator = GenerateJsonSchema(ref_template=REF_SCHEMAS_TEMPLATE)
 
     fields = get_fields(operations)
@@ -144,7 +148,9 @@ def get_asyncapi(
             },
         }
     }
-    messages = {k: v.model_dump(exclude_unset=True) for k, v in messages.items()}
+    messages = {
+        k: v.model_dump(by_alias=True, exclude_unset=True) for k, v in messages.items()
+    }
     output["components"] = {"schemas": definitions, "messages": messages}
     return asyncapi.AsyncAPI(**output).model_dump(by_alias=True, exclude_none=True)
 

@@ -6,7 +6,6 @@ from typing import Generic, Literal, TypeVar, Union
 from fastapi.dependencies.utils import get_typed_return_annotation, get_typed_signature
 from pydantic import BaseModel
 
-
 MethodT = Literal["SEND", "RECEIVE"]
 PayloadT = TypeVar("PayloadT")
 EventTypeT = TypeVar("EventTypeT", str, int)
@@ -48,6 +47,7 @@ class Operation:
         tags: list[str | Enum] | None = None,
         summary: str | None = None,
         description: str | None = None,
+        reply_operation: str | None = None,
     ) -> None:
         self.operation = operation
         self.handler = handler
@@ -59,15 +59,25 @@ class Operation:
         self.description = self.description.split("\f")[0].strip()
         self.response_model = get_typed_return_annotation(self.handler)
         self.parameters = get_typed_signature(self.handler).parameters.copy()
+        self.reply_operation = (
+            reply_operation if self.method == "SEND" else self.operation
+        )
+        if self.method == "SEND" and self.response_model is not None:
+            assert (
+                self.reply_operation is not None
+            ), "Send operations with a response model defined must include a reply"
 
-        event_type_t = Literal[self.operation]  # type: ignore
-        self.payload = _Msg[event_type_t]
-        self.response_payload = _Msg[event_type_t]
+        op_t = Literal[self.operation]  # type: ignore
+        reply_t = Literal[self.reply_operation or self.operation]  # type: ignore
+
+        self.payload = _Msg[op_t]
+        self.reply_payload = _Msg[reply_t]
 
         if (p := self.parameters.get("payload", None)) is not None:
-            self.payload = _MsgWithPayload[event_type_t, p.annotation]
+            self.payload = _MsgWithPayload[op_t, p.annotation]
+
         if self.response_model is not None:
-            self.response_payload = _MsgWithPayload[event_type_t, self.response_model]
+            self.reply_payload = _MsgWithPayload[reply_t, self.response_model]
 
     def matches(self, operation: str, method: MethodT) -> bool:
         return self.operation == operation and self.method == method
@@ -113,10 +123,17 @@ class OperationRouter:
         tags: list[str | Enum] | None = None,
         summary: str | None = None,
         description: str | None = None,
+        reply_operation: str | None = None,
     ) -> None:
-        assert operation not in [
-            h.operation for h in self.routes
-        ], f"handler with operation '{operation}' already added"
+        existing_operations = [h.operation for h in self.routes] + [
+            h.reply_operation for h in self.routes if h.reply_operation is not None
+        ]
+        assert (
+            operation not in existing_operations
+        ), f"handler with operation '{operation}' already added"
+        assert (
+            reply_operation not in existing_operations
+        ), f"handler with operation '{reply_operation}' already added"
         current_tags = self.tags.copy()
         if tags:
             current_tags.extend(tags)
@@ -128,6 +145,7 @@ class OperationRouter:
             summary=summary,
             description=description,
             tags=current_tags,
+            reply_operation=reply_operation,
         )
         self.routes.append(route)
 
@@ -155,6 +173,7 @@ class OperationRouter:
         tags: list[str | Enum] | None = None,
         summary: str | None = None,
         description: str | None = None,
+        reply: str | None = None,
     ) -> typing.Callable[
         [typing.Callable[..., typing.Any]], typing.Callable[..., typing.Any]
     ]:
@@ -169,6 +188,7 @@ class OperationRouter:
                 tags=tags,
                 summary=summary,
                 description=description,
+                reply_operation=reply,
             )
             return func
 

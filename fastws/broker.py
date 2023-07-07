@@ -62,6 +62,7 @@ class Broker:
         tags: list[str | Enum] | None = None,
         summary: str | None = None,
         description: str | None = None,
+        reply: str | None = None,
     ) -> typing.Callable[
         [typing.Callable[..., typing.Any]], typing.Callable[..., typing.Any]
     ]:
@@ -76,6 +77,7 @@ class Broker:
                 tags=tags,
                 summary=summary,
                 description=description,
+                reply_operation=reply,
             )
             return func
 
@@ -125,8 +127,10 @@ class Broker:
             handler=route.handler,
             values=values,
         )
-        return route.response_payload.model_validate(
-            {"type": message.type, "payload": result}
+        if route.reply_operation is None:
+            return
+        return route.reply_payload.model_validate(
+            {"type": route.reply_operation or route.operation, "payload": result}
         )
 
     def asyncapi(self) -> dict[str, typing.Any]:
