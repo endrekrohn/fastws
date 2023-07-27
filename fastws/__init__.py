@@ -1,6 +1,6 @@
 """FastWS framework. Auto-documentation WebSockets using AsyncAPI around FastAPI."""
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 from .application import Client as Client
 from .application import FastWS as FastWS
