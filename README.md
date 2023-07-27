@@ -61,9 +61,9 @@ from fastws import Client, FastWS
 service = FastWS()
 
 
-@service.send("ping")
-async def send_event_a() -> str:
-    return "pong"
+@service.send("ping", reply="ping")
+async def send_event_a():
+    return
 
 
 @asynccontextmanager
@@ -108,9 +108,9 @@ Next up we connect an operation (a WebSocket message) to the service, using the 
 The operation-identificator is in this case `"ping"`, meaning we will use this string to identify what type of message we are receiving.
 
 ```Python
-@service.send("ping")
-async def send_event_a() -> str:
-    return "pong"
+@service.send("ping", reply="ping")
+async def send_event_a():
+    return
 ```
 
 If we want to define an `payload` for the operation we can extend the example:
@@ -121,9 +121,9 @@ from pydantic import BaseModel
 class PingPayload(BaseModel):
     foo: str
 
-@service.send("ping")
-async def send_event_a(payload: PingPayload) -> str:
-    return "pong"
+@service.send("ping", reply="ping")
+async def send_event_a(payload: PingPayload):
+    return
 ```
 
 An incoming message should now have the following format. (We will later view this in the generated AsyncAPI-documentation).
@@ -182,7 +182,7 @@ class SubscribeResponse(BaseModel):
     topics: set[str]
 
 
-@router.send("subscribe")
+@router.send("subscribe", reply="subscribe.response")
 async def subscribe_to_topic(
     payload: SubscribePayload,
     client: Client,
@@ -243,7 +243,7 @@ class Thing(BaseModel):
     bar: str
 
 
-@router.send("foo")
+@router.send("foo", reply="bar")
 async def some_function(
     payload: Something,
     client: Client,
@@ -374,7 +374,7 @@ async def fastws_stream(
 
 ## Heartbeats and connection lifespan
 
-To handle a WebSocket's lifespan FastWS tries to help you by using `asyncio.timeout()`-context managers in its `serve(client)`-function.
+To handle a WebSocket's lifespan at an application level, FastWS tries to help you by using `asyncio.timeout()`-context managers in its `serve(client)`-function.
 
 You can set the both:
 - `heartbeat_interval`: Meaning a client needs to send a message within this time.
@@ -393,7 +393,7 @@ service = FastWS(
 
 Both `heartbeat_interval` and `max_connection_lifespan` can be set to None to disable any restrictions. Note this is the default.
 
-Please note that you can often also set restrictions in your ASGI-server. Applicable settings for [uvicorn](https://www.uvicorn.org/#command-line-options):
+Please note that you can also set restrictions in your ASGI-server. These restrictions apply at a protocol/server-level and are different from the restrictions set by your application. Applicable settings for [uvicorn](https://www.uvicorn.org/#command-line-options):
 - `--ws-ping-interval` INTEGER
 - `--ws-ping-timeout` INTEGER
 - `--ws-max-size` INTEGER

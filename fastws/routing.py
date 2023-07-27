@@ -164,6 +164,7 @@ class OperationRouter:
                 tags=route.tags,
                 summary=route.summary,
                 description=route.description,
+                reply_operation=f"{prefix}{router.prefix}{route.reply_operation}",
             )
 
     def send(
