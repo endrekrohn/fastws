@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Setup a local venv
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - uses: actions/cache@v3
+        id: cache
+        name: Define a cache for the venv based on the lock file
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install the project dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: poetry install --no-cache
+      - name: Run lint
+        run: | 
+          poetry run ruff check .
+          poetry run black --check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+      - name: Setup a local venv
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - uses: actions/cache@v3
+        id: cache
+        name: Define a cache for the venv based on the lock file
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install the project dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: poetry install --no-cache
+      - name: Run tests
+        run: poetry run pytest -v
