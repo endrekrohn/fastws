@@ -122,19 +122,19 @@ class FastWS(Broker):
     ):
         self.log(f"could not parse message {exc}")
         error = WebSocketException(
-            code=status.WS_1006_ABNORMAL_CLOSURE, reason="Could not decode message"
+            code=status.WS_1003_UNSUPPORTED_DATA, reason="Could not decode message"
         )
         if isinstance(exc, ValidationError):
-            error.add_note("Could not validate payload")
+            error.reason = "Could not validate payload"
         if isinstance(exc, NoMatchingOperation):
-            error.add_note("No matching type")
+            error.reason = "No matching type"
         if isinstance(exc, TimeoutError):
-            error.add_note(
+            error.reason = (
                 "Connection timed out. "
                 + f"Heartbeat interval {self.heartbeat_interval or 'unset'}. "
                 + f"Max connection lifespan {self.max_connection_lifespan or 'unset'}"
             )
-        raise exc
+        raise error
 
     async def serve(self, client: Client):
         try:

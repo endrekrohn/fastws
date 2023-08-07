@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastws"
-version = "0.1.6"
+version = "0.1.7"
 description = "FastWS framework. A WebSocket wrapper around FastAPI with auto-documentation using AsyncAPI."
 authors = ["Endre Krohn <endre@skript.no>"]
 readme = "README.md"
